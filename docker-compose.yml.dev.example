@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+  main:
+    image: jrongbin/puppeteer-renderer
+    volumes:
+      - ".:/app"
+    environment:
+      - VIRTUAL_HOST=puppeteer.127.0.0.1.xip.io
+      - VIRTUAL_PORT=3000
+
+networks:
+  default:
+    external:
+      name: base_default
