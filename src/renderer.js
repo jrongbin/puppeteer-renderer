@@ -37,7 +37,8 @@ class Renderer {
     try {
       const { timeout, waitUntil, options } = params
       page = await this.createPage(url, { timeout, waitUntil })
-      const buffer = await page.pdf(JSON.parse(options))
+
+      const buffer = await page.pdf(options ? JSON.parse(options) : {})
       return buffer
     } finally {
       if (page) {
@@ -52,7 +53,7 @@ class Renderer {
       const { timeout, waitUntil, options } = params
       page = await this.createPage(url, { timeout, waitUntil })
 
-      const buffer = await page.screenshot(JSON.parse(options))
+      const buffer = await page.screenshot(options ? JSON.parse(options) : {})
       return buffer
     } finally {
       if (page) {
