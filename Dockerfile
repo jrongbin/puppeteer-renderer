@@ -15,10 +15,8 @@ RUN set -ex \
 
 COPY . /app
 
-RUN cd /app && npm install --quiet
+WORKDIR /app
+RUN yarn --no-progress
 
 EXPOSE 3000
-
-WORKDIR /app
-
-CMD npm run start
+CMD yarn start
