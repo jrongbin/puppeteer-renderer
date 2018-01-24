@@ -1,6 +1,7 @@
 'use strict'
 
 const puppeteer = require('puppeteer')
+const _ = require('lodash')
 
 class Renderer {
   constructor(browser) {
@@ -38,7 +39,7 @@ class Renderer {
       const { timeout, waitUntil, options } = params
       page = await this.createPage(url, { timeout, waitUntil })
 
-      const buffer = await page.pdf(options ? JSON.parse(options) : {})
+      const buffer = await page.pdf(this.permitOptions(options))
       return buffer
     } finally {
       if (page) {
@@ -53,7 +54,7 @@ class Renderer {
       const { timeout, waitUntil, options } = params
       page = await this.createPage(url, { timeout, waitUntil })
 
-      const buffer = await page.screenshot(options ? JSON.parse(options) : {})
+      const buffer = await page.screenshot(this.permitOptions(options))
       return buffer
     } finally {
       if (page) {
@@ -64,6 +65,14 @@ class Renderer {
 
   async close() {
     await this.browser.close()
+  }
+
+  permitOptions(options) {
+    if (options) {
+      return _.omit(JSON.parse(options), ['path'])
+    } else {
+      return {}
+    }
   }
 }
 
