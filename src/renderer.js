@@ -32,20 +32,12 @@ class Renderer {
     }
   }
 
-  async pdf(url, options) {
+  async pdf(url, params) {
     let page = null
     try {
-      const { timeout, waitUntil, ...extraOptions } = options
+      const { timeout, waitUntil, options } = params
       page = await this.createPage(url, { timeout, waitUntil })
-
-      const { scale, displayHeaderFooter, printBackground, landscape } = extraOptions
-      const buffer = await page.pdf({
-        ...extraOptions,
-        scale: Number(scale),
-        displayHeaderFooter: displayHeaderFooter === 'true',
-        printBackground: printBackground === 'true',
-        landscape: landscape === 'true',
-      })
+      const buffer = await page.pdf(JSON.parse(options))
       return buffer
     } finally {
       if (page) {
@@ -54,19 +46,13 @@ class Renderer {
     }
   }
 
-  async screenshot(url, options) {
+  async screenshot(url, params) {
     let page = null
     try {
-      const { timeout, waitUntil, ...extraOptions } = options
+      const { timeout, waitUntil, options } = params
       page = await this.createPage(url, { timeout, waitUntil })
 
-      const { quality, fullPage, omitBackground } = extraOptions
-      const buffer = await page.screenshot({
-        ...extraOptions,
-        quality: Number(quality) || 100,
-        fullPage: fullPage === 'true',
-        omitBackground: omitBackground === 'true',
-      })
+      const buffer = await page.screenshot(JSON.parse(options))
       return buffer
     } finally {
       if (page) {

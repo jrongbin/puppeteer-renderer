@@ -14,7 +14,7 @@ app.disable('x-powered-by')
 
 // Render url.
 app.use(async (req, res, next) => {
-  let { url, type, ...options } = req.query
+  let { url, type, ...otherParams } = req.query
 
   if (!url) {
     return res.status(400).send('Search with url parameter. For eaxample, ?url=http://yourdomain')
@@ -27,17 +27,17 @@ app.use(async (req, res, next) => {
   try {
     switch (type) {
       case 'pdf':
-        const pdf = await renderer.pdf(url, options)
+        const pdf = await renderer.pdf(url, otherParams)
         res.set('Content-type', 'application/pdf').send(pdf)
         break
 
       case 'screenshot':
-        const image = await renderer.screenshot(url, options)
+        const image = await renderer.screenshot(url, otherParams)
         res.set('Content-type', 'image/png').send(image)
         break
 
       default:
-        const html = await renderer.render(url, options)
+        const html = await renderer.render(url, otherParams)
         res.status(200).send(html)
     }
   } catch (e) {
