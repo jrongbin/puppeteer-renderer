@@ -8,13 +8,22 @@ class Renderer {
     this.browser = browser
   }
 
-  async createPage(url, { timeout, waitUntil }) {
+  async createPage(url, { timeout, waitUntil, viewport, userAgent }) {
     let gotoOptions = {
       timeout: Number(timeout) || 30 * 1000,
       waitUntil: waitUntil || 'networkidle2',
     }
 
     const page = await this.browser.newPage()
+
+    if (viewport) {
+      page.setViewport(JSON.parse(viewport))
+    }
+
+    if (userAgent) {
+      page.setUserAgent(userAgent)
+    }
+
     await page.goto(url, gotoOptions)
     return page
   }
@@ -22,8 +31,7 @@ class Renderer {
   async render(url, options) {
     let page = null
     try {
-      const { timeout, waitUntil } = options
-      page = await this.createPage(url, { timeout, waitUntil })
+      page = await this.createPage(url, { ...options })
       const html = await page.content()
       return html
     } finally {
@@ -36,10 +44,9 @@ class Renderer {
   async pdf(url, params) {
     let page = null
     try {
-      const { timeout, waitUntil, options } = params
-      page = await this.createPage(url, { timeout, waitUntil })
+      page = await this.createPage(url, { ...params })
 
-      const buffer = await page.pdf(this.permitOptions(options))
+      const buffer = await page.pdf(this.permitOptions(params.options))
       return buffer
     } finally {
       if (page) {
@@ -51,10 +58,9 @@ class Renderer {
   async screenshot(url, params) {
     let page = null
     try {
-      const { timeout, waitUntil, options } = params
-      page = await this.createPage(url, { timeout, waitUntil })
+      page = await this.createPage(url, { ...params })
 
-      const buffer = await page.screenshot(this.permitOptions(options))
+      const buffer = await page.screenshot(this.permitOptions(params.options))
       return buffer
     } finally {
       if (page) {
