@@ -11,7 +11,7 @@ class Renderer {
   async createPage(url, { timeout, waitUntil, viewport, userAgent }) {
     let gotoOptions = {
       timeout: Number(timeout) || 30 * 1000,
-      waitUntil: waitUntil || 'networkidle2',
+      waitUntil: waitUntil || 'networkidle0',
     }
 
     const page = await this.browser.newPage()
