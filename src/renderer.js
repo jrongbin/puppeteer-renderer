@@ -1,37 +1,32 @@
 'use strict'
 
 const puppeteer = require('puppeteer')
-const _ = require('lodash')
 
 class Renderer {
   constructor(browser) {
     this.browser = browser
   }
 
-  async createPage(url, { timeout, waitUntil, viewport, userAgent }) {
-    let gotoOptions = {
-      timeout: Number(timeout) || 30 * 1000,
-      waitUntil: waitUntil || 'networkidle0',
-    }
-
+  async createPage(url, options = {}) {
+    const { timeout, waitUntil, userAgent } = options
     const page = await this.browser.newPage()
-
-    if (viewport) {
-      page.setViewport(JSON.parse(viewport))
-    }
 
     if (userAgent) {
       page.setUserAgent(userAgent)
     }
 
-    await page.goto(url, gotoOptions)
+    await page.goto(url, {
+      timeout: Number(timeout) || 30 * 1000,
+      waitUntil: waitUntil || 'networkidle0',
+    })
     return page
   }
 
-  async render(url, options) {
+  async render(url, options = {}) {
     let page = null
     try {
-      page = await this.createPage(url, { ...options })
+      const { timeout, waitUntil } = options
+      page = await this.createPage(url, { timeout, waitUntil })
       const html = await page.content()
       return html
     } finally {
@@ -41,12 +36,20 @@ class Renderer {
     }
   }
 
-  async pdf(url, params) {
+  async pdf(url, options = {}) {
     let page = null
     try {
-      page = await this.createPage(url, { ...params })
+      const { timeout, waitUntil, ...extraOptions } = options
+      page = await this.createPage(url, { timeout, waitUntil })
 
-      const buffer = await page.pdf(this.permitOptions(params.options))
+      const { scale, displayHeaderFooter, printBackground, landscape } = extraOptions
+      const buffer = await page.pdf({
+        ...extraOptions,
+        scale: Number(scale),
+        displayHeaderFooter: displayHeaderFooter === 'true',
+        printBackground: printBackground === 'true',
+        landscape: landscape === 'true',
+      })
       return buffer
     } finally {
       if (page) {
@@ -55,12 +58,24 @@ class Renderer {
     }
   }
 
-  async screenshot(url, params) {
+  async screenshot(url, options = {}) {
     let page = null
     try {
-      page = await this.createPage(url, { ...params })
+      const { timeout, waitUntil, ...extraOptions } = options
+      page = await this.createPage(url, { timeout, waitUntil })
+      page.setViewport({
+        width: Number(extraOptions.width || 800),
+        height: Number(extraOptions.height || 600),
+      })
 
-      const buffer = await page.screenshot(this.permitOptions(params.options))
+      const { fullPage, omitBackground, imageType, quality } = extraOptions
+      const buffer = await page.screenshot({
+        ...extraOptions,
+        type: imageType || 'png',
+        quality: Number(quality) || (imageType === undefined || imageType == 'png' ? 0 : 100),
+        fullPage: fullPage === 'true',
+        omitBackground: omitBackground === 'true',
+      })
       return buffer
     } finally {
       if (page) {
@@ -71,14 +86,6 @@ class Renderer {
 
   async close() {
     await this.browser.close()
-  }
-
-  permitOptions(options) {
-    if (options) {
-      return _.omit(JSON.parse(options), ['path'])
-    } else {
-      return {}
-    }
   }
 }
 

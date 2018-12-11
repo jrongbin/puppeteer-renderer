@@ -1,6 +1,8 @@
 'use strict'
 
 const express = require('express')
+const { URL } = require('url')
+const contentDisposition = require('content-disposition')
 const createRenderer = require('./renderer')
 
 const port = process.env.PORT || 3000
@@ -14,7 +16,7 @@ app.disable('x-powered-by')
 
 // Render url.
 app.use(async (req, res, next) => {
-  let { url, type, ...otherParams } = req.query
+  let { url, type, ...options } = req.query
 
   if (!url) {
     return res.status(400).send('Search with url parameter. For eaxample, ?url=http://yourdomain')
@@ -27,17 +29,26 @@ app.use(async (req, res, next) => {
   try {
     switch (type) {
       case 'pdf':
-        const pdf = await renderer.pdf(url, otherParams)
+        const urlObj = new URL(url)
+        let filename = urlObj.hostname
+        if (urlObj.pathname !== '/') {
+          filename = urlObj.pathname.split('/').pop()
+          if (filename === '') filename = urlObj.pathname.replace(/\//g, '')
+          const extDotPosition = filename.lastIndexOf('.')
+          if (extDotPosition > 0) filename = filename.substring(0, extDotPosition)
+        }
+        const pdf = await renderer.pdf(url, options)
         res
           .set({
             'Content-type': 'application/pdf',
             'Content-Length': pdf.length,
+            'Content-Disposition': contentDisposition(filename + '.pdf'),
           })
           .send(pdf)
         break
 
       case 'screenshot':
-        const image = await renderer.screenshot(url, otherParams)
+        const image = await renderer.screenshot(url, options)
         res
           .set({
             'Content-type': 'image/png',
@@ -47,7 +58,7 @@ app.use(async (req, res, next) => {
         break
 
       default:
-        const html = await renderer.render(url, otherParams)
+        const html = await renderer.render(url, options)
         res.status(200).send(html)
     }
   } catch (e) {
