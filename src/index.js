@@ -48,10 +48,12 @@ app.use(async (req, res, next) => {
         break
 
       case 'screenshot':
+        const { imageType = 'png' } = options
         const image = await renderer.screenshot(url, options)
+
         res
           .set({
-            'Content-type': 'image/png',
+            'Content-type': `image/${imageType}`,
             'Content-Length': image.length,
           })
           .send(image)
